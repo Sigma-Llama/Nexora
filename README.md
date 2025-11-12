@@ -84,7 +84,7 @@ Strežnik je v celoti vsebovan v Docker okolju.
 
 1.  **Klonirajte repozitorij:**
     ```sh
-    git clone [pride kmalu]
+    git clone https://github.com/Sigma-Llama/Nexora.git
     cd Nexora
     ```
 
