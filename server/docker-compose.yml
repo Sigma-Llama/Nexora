@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  pythonapp:
+    build: ./python/
+    command: sh -c "python3 ./main.py"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: server
+      DB_PASS: password
+      DB_NAME: db
+    volumes:
+      - ./python/:/app
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: db
+      MYSQL_USER: server
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      retries: 10
+      timeout: 3s
+
+volumes:
+  db_data:
