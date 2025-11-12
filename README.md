@@ -44,8 +44,7 @@ Cilj projekta je ustvariti robustno in razširljivo platformo za klepet.
 
 ## 📁 Struktura Projekta
 
-<code>
-Nexora/
+<code>Nexora/
 │
 ├── client/
 │   ├── app/
@@ -71,8 +70,7 @@ Nexora/
 │   ├── release/
 |   └── docker-compose.yml
 |
-└── README.md
-</code>
+└── README.md</code>
 
 ---
 
