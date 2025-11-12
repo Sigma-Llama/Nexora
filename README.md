@@ -80,7 +80,7 @@ Za zagon projekta boste potrebovali nameščen **Docker**, **Docker Compose** in
 
 ### 1. Zagon Strežnika (Server)
 
-Strežnik je v celoti vsebovan v Docker okolju.
+Strežnik je v celoti zasnovan za delo v Docker okolju, tako je najlažje za vzpostavitev strižnika in predstavlja najmanj težav.
 
 1.  **Klonirajte repozitorij:**
     ```sh
@@ -89,12 +89,14 @@ Strežnik je v celoti vsebovan v Docker okolju.
     ```
 
 2.  **Zaženite Docker Compose:**
-    Ta ukaz bo zgradil in zagnal Docker vsebnik za Python aplikacijo in vsebnik za MySQL podatkovno bazo.
+    Ta ukaz bo zgradil in zagnal Docker konteiner, ki vsebuje Python aplikacijo in MySQL podatkovno bazo.
+    Za zagon konteinerja moremo prvo locirati datoteko `docker-compose.yml`, z naslednjimi komandami.
     ```sh
+    cd server
     docker-compose up -d
     ```
 
-Strežnik bo sedaj poslušal na določenih vratih (definiranih v `docker-compose.yml` in `server/python/main.py`).
+Strežnik bo že deloval vendar brez grafičnega vmesnika. Strežnik bo tako že pošiljal in sprejemau podatke preko prejdoločenega porta (definiran v `docker-compose.yml`).
 
 ### 2. Zagon Odjemalca (Client/App)
 
