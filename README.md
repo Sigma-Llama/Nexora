@@ -6,6 +6,7 @@ To je aplikacija za pošiljanje sporočil v realnem času. Namen aplikacije je r
 
 * **Luka Podbreznik**
 * **Sinan Šale**
+* **Matic Tement**
 
 ---
 
