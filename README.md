@@ -38,7 +38,7 @@ Cilj projekta je ustvariti robustno in razširljivo platformo za klepet.
 * **Frontend (GUI):** Python z knjižnico Custom Tkinter
 * **Podatkovna Baza:** MySQL
 * **Komunikacija:** WebSockets
-* **Strežba/Postavitev:** Docker & Docker Compose
+* **Strežniška tehnologija:** Docker & Docker Compose
 
 ---
 
@@ -54,6 +54,7 @@ Cilj projekta je ustvariti robustno in razširljivo platformo za klepet.
 │   │   ├── main.py
 │   │   └── websocket.py
 │   └── release/
+|       └── v1
 │
 ├── server/
 │   ├── mysql/
@@ -68,8 +69,10 @@ Cilj projekta je ustvariti robustno in razširljivo platformo za klepet.
 │   │   └── Dockerfile
 |   |
 │   ├── release/
+|   |   └── v1
 |   └── docker-compose.yml
 |
+├── LICENSE
 └── README.md</code>
 
 ---
