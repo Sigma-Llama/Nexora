@@ -68,11 +68,8 @@ def run(host='0.0.0.0', port=5000):
     key = os.path.join(BASE_DIR, 'key.pem')
     if os.path.exists(cert) and os.path.exists(key):
         ssl_context = (cert, key)
-        print(f"[API] Running HTTPS on https://{host}:{port}")
         app.run(host=host, port=port, ssl_context=ssl_context)
     else:
-        print('[API] Certificate or key not found; running HTTP. To enable HTTPS, place cert.pem and key.pem in this folder.')
-        print(f"[API] Running HTTP on http://{host}:{port}")
         app.run(host=host, port=port)
 
 

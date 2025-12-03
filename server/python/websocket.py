@@ -4,6 +4,8 @@ import threading
 
 HEADER = 64
 PORT = 8765
+
+
 try:
     SERVER = socket.gethostbyname(socket.gethostname())
 except Exception:
@@ -52,22 +54,20 @@ def send_msg(conn, msg: str):
 
 
 def handle_client(conn, addr):
-    print(f"[SERVER] New connection from {addr}")
+    
     try:
         while True:
             msg = recv_msg(conn)
             if msg is None:
-                print(f"[SERVER] Connection closed by {addr}")
                 break
             if msg == DISCONNECT_MESSAGE:
-                print(f"[SERVER] Received disconnect from {addr}")
                 break
-            print(f"[SERVER] Received from {addr}: {msg}")
+            
             
     except ConnectionResetError:
-        print(f"[SERVER] Connection reset by {addr}")
-    except Exception as e:
-        print(f"[SERVER] Error with {addr}: {e}")
+        pass
+    except Exception:
+        pass
     finally:
         try:
             conn.close()
@@ -77,14 +77,12 @@ def handle_client(conn, addr):
 
 def start():
     server.listen(5)
-    print(f"[SERVER] Listening on {SERVER}:{PORT}")
     while True:
         conn, addr = server.accept()
         thread = threading.Thread(target=handle_client, args=(conn, addr), daemon=True)
         thread.start()
-        print(f"[SERVER] Active connections: {threading.active_count() - 1}")
+        
 
 
 if __name__ == '__main__':
-    print("[SERVER] Starting server...")
     start()

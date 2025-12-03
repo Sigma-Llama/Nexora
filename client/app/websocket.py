@@ -52,11 +52,8 @@ def _listen_forever(conn):
 		try:
 			msg = recv_msg(conn)
 			if msg is None:
-				print("[CLIENT] Server closed connection")
 				break
-			print(f"[CLIENT] Received: {msg}")
-		except Exception as e:
-			print(f"[CLIENT] Listener error: {e}")
+		except Exception:
 			break
 
 
@@ -72,7 +69,6 @@ def connect():
 	try:
 		client.connect(ADDR)
 	except Exception as e:
-		print(f"[CLIENT] Could not connect to {ADDR}: {e}")
 		raise
 	start_listener()
 

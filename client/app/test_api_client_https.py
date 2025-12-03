@@ -14,21 +14,23 @@ def load_api_client():
 
 def run_tests():
     c = load_api_client()
+    base = 'https://127.0.0.1:5000'
     try:
-        cleared = c.clear_messages(base_url='http://127.0.0.1:5000')
+        cleared = c.clear_messages(base_url=base, verify=False)
         print('CLEAR:', json.dumps(cleared, ensure_ascii=False))
     except Exception as e:
         print('CLEAR ERROR:', e)
     try:
-        sent = c.send_message('hello from test', sender='tester', room='room1', base_url='http://127.0.0.1:5000')
-        print('SEND:', json.dumps(sent, ensure_ascii=False))
-    except Exception as e:
-        print('SEND ERROR:', e)
+        sent = c.send_message('hello via HTTPS test', sender='tester', room='room1', base_url=base, verify=False)
+    except Exception:
+        sent = None
     try:
-        msgs = c.get_messages(base_url='http://127.0.0.1:5000')
-        print('GET:', json.dumps(msgs, ensure_ascii=False))
-    except Exception as e:
-        print('GET ERROR:', e)
+        msgs = c.get_messages(base_url=base, verify=False)
+    except Exception:
+        msgs = None
+    # Print results for test script
+    print('SEND:', json.dumps(sent, ensure_ascii=False))
+    print('GET:', json.dumps(msgs, ensure_ascii=False))
 
 
 if __name__ == '__main__':

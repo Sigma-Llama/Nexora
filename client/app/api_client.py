@@ -35,9 +35,7 @@ def clear_messages(base_url: str = DEFAULT_BASE, verify: bool = False):
 
 if __name__ == '__main__':
     try:
-        print('Sending test message...')
-        print(send_message('hello from client', sender='client-test', verify=False))
-        print('Listing messages...')
-        print(get_messages(verify=False))
-    except Exception as e:
-        print('API client error:', e)
+        send_message('hello from client', sender='client-test', verify=False)
+        get_messages(verify=False)
+    except Exception:
+        pass
