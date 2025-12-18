@@ -2,10 +2,11 @@ import customtkinter as ctk
 from tkinter import ttk
 import threading
 import time
-from client.app import api_client
+import os
+import api_client
 
 
-def run_discord_like():
+def run_discord_like(base_url: str = 'http://127.0.0.1:6700', verify: bool = False):
     ctk.set_appearance_mode("System")
     ctk.set_default_color_theme("blue")
 
@@ -114,8 +115,8 @@ def run_discord_like():
     input_entry.pack(side='left', fill='x', expand=True, padx=(10,6), pady=10)
 
     # API settings
-    BASE_URL = 'https://127.0.0.1:5000'
-    VERIFY = False
+    BASE_URL = base_url
+    VERIFY = verify
 
     def send():
         text = input_entry.get().strip()
@@ -132,6 +133,7 @@ def run_discord_like():
                 pass
         threading.Thread(target=_send_bg, daemon=True).start()
 
+    # start poller thread (fallback) and also start websocket client for realtime updates
     def poll_loop():
         while True:
             try:
@@ -144,13 +146,34 @@ def run_discord_like():
                         ts = m.get('ts') or m.get('DateInf') or text
                         add_message(text, sender if sender else 'them', ts=ts)
                 root.after(0, _update)
-            except Exception as e:
-                # ignore transient errors (server down, etc.)
+            except Exception:
                 pass
             time.sleep(2)
 
-    # start poller thread
     threading.Thread(target=poll_loop, daemon=True).start()
+
+    # websocket realtime client (uses websocket-client). Import local client explicitly.
+    try:
+        import sys
+        import importlib
+        # ensure local `client/app` is preferred
+        sys.path.insert(0, os.path.dirname(__file__))
+        ws_client = importlib.import_module('ws_client')
+
+        def _on_ws(msg):
+            root.after(0, lambda: add_message(msg, 'them'))
+
+        try:
+            if hasattr(ws_client, 'set_on_message'):
+                ws_client.set_on_message(_on_ws)
+            try:
+                ws_client.connect()
+            except Exception:
+                pass
+        except Exception:
+            pass
+    except Exception:
+        pass
 
     send_btn = ctk.CTkButton(input_bar, text="Send", width=100, command=send)
     send_btn.pack(side='right', padx=(6,10), pady=10)

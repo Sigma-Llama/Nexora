@@ -1,23 +1,25 @@
 import socket
 import threading
+import os
 
 
 HEADER = 64
-PORT = 8765
-
-
-try:
-    SERVER = socket.gethostbyname(socket.gethostname())
-except Exception:
-    SERVER = "127.0.0.1"
-ADDR = (SERVER, PORT)
+PORT = int(os.getenv('NEXORA_WS_PORT', '8765'))
 FORMAT = 'utf-8'
 DISCONNECT_MESSAGE = "!DISCONNECT"
+
+# Bind to all interfaces in container environments
+SERVER = '0.0.0.0'
+ADDR = (SERVER, PORT)
 
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server.bind(ADDR)
+
+# track connected clients for broadcasting
+clients = []
+clients_lock = threading.Lock()
 
 
 def recv_exact(conn, n):
@@ -48,13 +50,37 @@ def recv_msg(conn):
 
 
 def send_msg(conn, msg: str):
-    data = msg.encode(FORMAT)
-    header = f"{len(data):<{HEADER}}".encode(FORMAT)
-    conn.sendall(header + data)
+    try:
+        data = msg.encode(FORMAT)
+        header = f"{len(data):<{HEADER}}".encode(FORMAT)
+        conn.sendall(header + data)
+    except Exception:
+        # caller will handle removal of dead clients
+        raise
+
+
+def broadcast(msg: str, exclude_conn=None):
+    with clients_lock:
+        for c in list(clients):
+            if c is exclude_conn:
+                continue
+            try:
+                send_msg(c, msg)
+            except Exception:
+                try:
+                    c.close()
+                except Exception:
+                    pass
+                try:
+                    clients.remove(c)
+                except ValueError:
+                    pass
 
 
 def handle_client(conn, addr):
-    
+    with clients_lock:
+        clients.append(conn)
+
     try:
         while True:
             msg = recv_msg(conn)
@@ -62,13 +88,19 @@ def handle_client(conn, addr):
                 break
             if msg == DISCONNECT_MESSAGE:
                 break
-            
-            
+            # broadcast received message to all other clients
+            broadcast(msg, exclude_conn=conn)
+
     except ConnectionResetError:
         pass
     except Exception:
         pass
     finally:
+        with clients_lock:
+            try:
+                clients.remove(conn)
+            except ValueError:
+                pass
         try:
             conn.close()
         except Exception:
@@ -81,7 +113,6 @@ def start():
         conn, addr = server.accept()
         thread = threading.Thread(target=handle_client, args=(conn, addr), daemon=True)
         thread.start()
-        
 
 
 if __name__ == '__main__':

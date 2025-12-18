@@ -63,7 +63,7 @@ def clear_messages():
     return jsonify({'status': 'cleared'}), 200
 
 
-def run(host='0.0.0.0', port=5000):
+def run(host='0.0.0.0', port=6700):
     cert = os.path.join(BASE_DIR, 'cert.pem')
     key = os.path.join(BASE_DIR, 'key.pem')
     if os.path.exists(cert) and os.path.exists(key):

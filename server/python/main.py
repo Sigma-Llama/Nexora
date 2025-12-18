@@ -11,17 +11,34 @@ try:
 	import db_def
 except Exception:
 	db_def = None
-import websocket as tcp_websocket
 import api as api_module
 import gmail_call
+import os
+
+# support both legacy TCP websocket server (server/python/websocket.py)
+# and an RFC WebSocket server (server/python/ws_server.py). Prefer RFC by default.
+try:
+	from ws_server import start as ws_server_start
+except Exception:
+	ws_server_start = None
+try:
+	import websocket as tcp_websocket
+except Exception:
+	tcp_websocket = None
 
 
-def run_api(host='0.0.0.0', port=5000):
+def run_api(host='0.0.0.0', port=6700):
 	api_module.run(host=host, port=port)
 
 
 def run_ws():
-	tcp_websocket.start()
+	proto = os.getenv('NEXORA_WS_PROTO', 'ws').lower()
+	if proto in ('ws', 'websocket') and ws_server_start:
+		ws_server_start()
+	elif proto in ('tcp',) and tcp_websocket:
+		tcp_websocket.start()
+	else:
+		raise RuntimeError('No websocket server available for protocol: ' + proto)
 
 
 def main():

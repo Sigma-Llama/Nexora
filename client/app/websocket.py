@@ -1,80 +1,85 @@
-import socket
 import threading
-from typing import Optional
+import os
+from typing import Optional, Callable
+
+import websocket as _ws_lib
 
 
-HEADER = 64
-PORT = 8765
-FORMAT = 'utf-8'
-DISCONNECT_MESSAGE = "!DISCONNECT"
-SERVER = "192.168.1.2"
-ADDR = (SERVER, PORT)
+_ws_app: Optional[object] = None
+_thread: Optional[threading.Thread] = None
+_on_message: Optional[Callable[[str], None]] = None
 
 
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-_listener_thread: Optional[threading.Thread] = None
+def set_on_message(cb: Callable[[str], None]):
+	global _on_message
+	_on_message = cb
 
 
-def recv_exact(conn, n):
-	data = bytearray()
-	while len(data) < n:
-		packet = conn.recv(n - len(data))
-		if not packet:
-			return None
-		data.extend(packet)
-	return bytes(data)
-
-
-def recv_msg(conn):
-	header = recv_exact(conn, HEADER)
-	if not header:
-		return None
-	try:
-		msg_len = int(header.decode(FORMAT).strip())
-	except ValueError:
-		return None
-	if msg_len == 0:
-		return ""
-	payload = recv_exact(conn, msg_len)
-	if payload is None:
-		return None
-	return payload.decode(FORMAT)
-
-
-def send_msg(conn, msg: str):
-	data = msg.encode(FORMAT)
-	header = f"{len(data):<{HEADER}}".encode(FORMAT)
-	conn.sendall(header + data)
-
-
-def _listen_forever(conn):
-	while True:
+def _on_ws_message(ws, message):
+	if _on_message:
 		try:
-			msg = recv_msg(conn)
-			if msg is None:
-				break
+			_on_message(message)
 		except Exception:
-			break
+			pass
+	else:
+		print('WS RECV:', message)
 
 
-def start_listener():
-	global _listener_thread
-	if _listener_thread and _listener_thread.is_alive():
-		return
-	_listener_thread = threading.Thread(target=_listen_forever, args=(client,), daemon=True)
-	_listener_thread.start()
+def _on_ws_error(ws, err):
+	print('WS ERROR:', err)
 
 
-def connect():
-	try:
-		client.connect(ADDR)
-	except Exception as e:
-		raise
-	start_listener()
+def _on_ws_close(ws, close_status_code, close_msg):
+	print('WS CLOSED:', close_status_code, close_msg)
 
 
-try:
-	client.connect(ADDR)
-	start_listener()
-except Exception:
-	pass
+def _on_ws_open(ws):
+	print('WS OPEN')
+
+
+def connect(url: Optional[str] = None):
+	"""Connect to a ws:// or wss:// URL. Starts listener thread."""
+	global _ws_app, _thread
+	if url is None:
+		host = os.getenv('NEXORA_WS_HOST', '127.0.0.1')
+		port = os.getenv('NEXORA_WS_PORT', '8765')
+		scheme = os.getenv('NEXORA_WS_SCHEME', 'ws')
+		url = f"{scheme}://{host}:{port}"
+
+	_ws_app = _ws_lib.WebSocketApp(url,
+						   on_open=_on_ws_open,
+						   on_message=_on_ws_message,
+						   on_error=_on_ws_error,
+						   on_close=_on_ws_close)
+
+	def run():
+		try:
+			_ws_app.run_forever()
+		except Exception as e:
+			print('WS run_forever error:', e)
+
+	_thread = threading.Thread(target=run, daemon=True)
+	_thread.start()
+	return _ws_app
+
+
+def send(msg: str):
+	if _ws_app and _ws_app.sock and _ws_app.sock.connected:
+		_ws_app.send(msg)
+	else:
+		raise RuntimeError('WebSocket not connected')
+
+
+def close():
+	if _ws_app:
+		try:
+			_ws_app.close()
+		except Exception:
+			pass
+
+
+def is_connected() -> bool:
+	return bool(_ws_app and _ws_app.sock and _ws_app.sock.connected)
+
+
+DISCONNECT_MESSAGE = "!DISCONNECT"

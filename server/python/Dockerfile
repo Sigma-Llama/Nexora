@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN pip install --no-cache-dir mysql-connector-python python-dotenv websockets requests
+RUN pip install --no-cache-dir -r requirements.txt \
+	mysql-connector-python python-dotenv cryptography requests
 
 CMD ["python", "main.py"]

@@ -1,7 +1,7 @@
 import requests
 from typing import Optional
 
-DEFAULT_BASE = 'https://127.0.0.1:5000'
+DEFAULT_BASE = 'http://127.0.0.1:6700'
 
 
 def send_message(text: str, sender: Optional[str] = None, room: Optional[str] = None, base_url: str = DEFAULT_BASE, verify: bool = False):
